@@ -1,3 +1,44 @@
+<?php
+include 'util/cart.php';
+include 'util/request.php';
+
+if (isset($_POST['username']) && isset($_POST['password'])) {
+
+    $result = postRequest(
+        'http://localhost:8068/web/uas/api/router/user.router.php',
+        array(
+            "func" => "login",
+            "username" => $_POST['username'],
+            "password" => $_POST['password'],
+        ),
+    );
+
+    if ($result['status'] == true) {
+        $result2 = getRequest(
+            'http://localhost:8068/web/uas/api/router/product.router.php',
+            array(
+                "func" => "getAll",
+            )
+        );
+
+        if ($result2['status'] == true) {
+            session_start();
+            $_SESSION['loggedIn'] = true;
+            $_SESSION['id'] = $result['data']['id'];
+            $_SESSION['name'] = $result['data']['name'];
+            $_SESSION['role'] = $result['data']['role'];
+
+            $_SESSION['cart'] = initCart($result2['data']);
+            header('location:store.php');
+        }
+    }
+
+} else {
+    $result = null;
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,13 +64,13 @@
                 <h6 class="card-title text-center mb-5">Sanapati Food Store</h6>
                 <hr>
                 <?php
-                if (empty($_GET)) {
+                if ($result == null) {
                     echo '<p class="text-success text-center">Submit form below</p>';
                 } else {
-                    echo '<p class="text-success text-center">' . $_GET['msg'] . '</p>';
+                    echo '<p class="text-danger text-center">' . $result['message'] . '</p>';
                 }
                 ?>
-                <form class="form-signin" method="post" action="function/login.php">
+                <form class="form-signin" method="post" action="login.php">
                     <div class="form-group">
                         <div class="input-group">
                             <div class="input-group-prepend">

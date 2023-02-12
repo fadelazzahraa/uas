@@ -1,3 +1,29 @@
+<?php
+include 'util/request.php';
+
+if (isset($_POST['name']) && isset($_POST['username']) && isset($_POST['password']) && isset($_POST['confirmpassword'])) {
+    if ($_POST['password'] != $_POST['confirmpassword']) {
+        $result = [
+            "status" => false,
+            "message" => "Confirm password not match!"
+        ];
+    } else {
+        $result = postRequest(
+            'http://localhost:8068/web/uas/api/router/user.router.php',
+            array(
+                "func" => "create",
+                "name" => $_POST['name'],
+                "username" => $_POST['username'],
+                "password" => $_POST['password'],
+            )
+        );
+    }
+} else {
+    $result = null;
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,13 +49,17 @@
                 <h6 class="card-title text-center mb-5">Sanapati Food Store</h6>
                 <hr>
                 <?php
-                if (empty($_GET)) {
+                if ($result == null) {
                     echo '<p class="text-success text-center">Submit form below</p>';
                 } else {
-                    echo '<p class="text-success text-center">' . $_GET['msg'] . '</p>';
+                    if ($result["status"] == true) {
+                        echo '<p class="text-success text-center">' . $result["message"] . '</p>';
+                    } else {
+                        echo '<p class="text-danger text-center">' . $result["message"] . '</p>';
+                    }
                 }
                 ?>
-                <form class="form-signin" method="post" action="function/signup.php">
+                <form class="form-signin" method="post" action="signup.php">
                     <div class="form-group">
                         <div class="input-group">
                             <div class="input-group-prepend">

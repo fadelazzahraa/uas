@@ -1,8 +1,16 @@
 <?php
 session_start();
 
-include 'function/user.php';
-$users = fetchAllUser();
+include 'util/request.php';
+
+$result = getRequest(
+    'http://localhost:8068/web/uas/api/router/user.router.php',
+    array(
+        "func" => "getAll",
+    )
+);
+
+$users = $result['data'];
 ?>
 
 <!DOCTYPE html>
@@ -53,7 +61,7 @@ $users = fetchAllUser();
                                         <th scope="row">' . $idx . '</th>
                                         <td>' . $user['name'] . '</td>
                                         <td>' . $user['username'] . '</td>
-                                        <!-- <td>' . $user['password'] . '</td> -->
+                                        
                                         <td>' . $user['role'] . '</td>
                                         <td>';
                                 if ($user['id'] != $_SESSION['id']) {

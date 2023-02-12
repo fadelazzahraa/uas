@@ -8,7 +8,7 @@ $pdo = pdo_connect();
 if ($pdo == null) {
     echo json_encode([
         "status" => false,
-        "data" => "Internal Error"
+        "message" => "Internal Error"
     ]);
 }
 
@@ -24,7 +24,8 @@ if (isset($_GET['func'])) {
             $data = getAllUser();
             echo json_encode([
                 "status" => $data[0],
-                "data" => $data[1]
+                "message" => $data[1],
+                "data" => $data[2],
             ]);
             break;
         case "get":
@@ -45,7 +46,8 @@ if (isset($_GET['func'])) {
             $datum = getUserByID($_GET['id']);
             echo json_encode([
                 "status" => $datum[0],
-                "data" => $datum[1]
+                "message" => $datum[1],
+                "data" => $datum[2]
             ]);
             break;
         case "delete":
@@ -66,7 +68,7 @@ if (isset($_GET['func'])) {
             $datum = deleteUser($_GET['id']);
             echo json_encode([
                 "status" => $datum[0],
-                "data" => $datum[1]
+                "message" => $datum[1]
             ]);
             break;
     }
@@ -210,6 +212,31 @@ if (isset($_GET['func'])) {
             echo json_encode([
                 "status" => $status[0],
                 "message" => $status[1]
+            ]);
+            break;
+        case "login":
+            if (!isset($_POST['username'])) {
+                echo json_encode([
+                    "status" => false,
+                    "message" => "Username must be provided!"
+                ]);
+                break;
+            } else if ($_POST['username'] == null) {
+                echo json_encode([
+                    "status" => false,
+                    "message" => "Error. Username can't be null!"
+                ]);
+                break;
+            }
+
+            $username = $_POST['username'];
+            $password = $_POST['password'] != null ? $_POST['password'] : "";
+
+            $datum = loginUser($username, $password);
+            echo json_encode([
+                "status" => $datum[0],
+                "message" => $datum[1],
+                "data" => $datum[2],
             ]);
             break;
 

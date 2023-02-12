@@ -1,18 +1,160 @@
 <?php
 session_start();
 
-include 'function/dbconnect.php';
-include 'function/cart.php';
+include 'util/cart.php';
+include 'util/request.php';
 include 'template/header.php';
 include 'template/footer.php';
 
+$result = [
+  "status" => False,
+  "message" => null,
+];
 
-if (!empty($_GET)) {
+if (!empty($_POST)) {
+  if (isset($_POST['action'])) {
+    if ($_POST['action'] == 'update') {
+      if (!isset($_GET['id'])) {
+        header("location:store.php");
+      }
+      $id = $_GET['id'];
+      $name = isset($_POST['name']) ? $_POST['name'] : null;
+      $description = isset($_POST['description']) ? $_POST['description'] : null;
+      $qty = isset($_POST['qty']) ? $_POST['qty'] : null;
+      $price = isset($_POST['price']) ? $_POST['price'] : null;
+      $image = (isset($_FILES['imgupload']) && $_FILES['imgupload']['name'] != "") ? $_FILES['imgupload'] : null;
+
+      if (
+        !(
+          (is_string($name) || $name == null) &&
+          (is_string($description) || $description == null) &&
+          (is_numeric($qty) || $name == null) &&
+          (is_numeric($price) || $price == null)
+        )
+      ) {
+        $result['status'] = false;
+        $result['message'] = 'Edit product failed. Make sure you input data with correct format!';
+      } else {
+        $result = postRequest(
+          'http://localhost:8068/web/uas/api/router/product.router.php',
+          $image != null
+          ? array(
+            "func" => "update",
+            "id" => $id,
+            "name" => $name,
+            "description" => $description,
+            "qty" => $qty,
+            "price" => $price,
+            "img" => curl_file_create($image['tmp_name'], $image['type'], $image['name']),
+          )
+          : array(
+            "func" => "update",
+            "id" => $id,
+            "name" => $name,
+            "description" => $description,
+            "qty" => $qty,
+            "price" => $price,
+          )
+        );
+
+        $result2 = getRequest(
+          'http://localhost:8068/web/uas/api/router/product.router.php',
+          array(
+            "func" => "getAll",
+          )
+        );
+
+        if ($result2['status'] == true) {
+          $_SESSION['cart'] = initCart($result2['data']);
+        }
+
+        $result3 = getRequest(
+          'http://localhost:8068/web/uas/api/router/product.router.php',
+          array(
+            "func" => "get",
+            "id" => $id,
+          )
+        );
+
+        if ($result3['status'] == false) {
+          header("location:store.php");
+        } else if ($result3['data'] == []) {
+          header("location:store.php");
+        } else {
+          $product = $result3['data'];
+        }
+
+      }
+    } else if ($_POST['action'] == 'delete') {
+      if (!isset($_GET['id'])) {
+        header("location:store.php");
+      }
+
+      $result = getRequest(
+        'http://localhost:8068/web/uas/api/router/product.router.php',
+        array(
+          "func" => "delete",
+          "id" => $_GET['id'],
+        )
+      );
+
+      if ($result['status'] == true) {
+        $result2 = getRequest(
+          'http://localhost:8068/web/uas/api/router/product.router.php',
+          array(
+            "func" => "getAll",
+          )
+        );
+
+        if ($result2['status'] == true) {
+          $_SESSION['cart'] = initCart($result2['data']);
+        }
+
+        header("location:store.php");
+      } else {
+        $result2 = getRequest(
+          'http://localhost:8068/web/uas/api/router/product.router.php',
+          array(
+            "func" => "get",
+            "id" => $id,
+          )
+        );
+
+        if ($result2['status'] == false) {
+          header("location:store.php");
+        } else if ($result2['data'] == []) {
+          header("location:store.php");
+        } else {
+          $product = $result2['data'];
+        }
+      }
+
+    } else {
+      header("location:store.php");
+    }
+  } else {
+    header("location:store.php");
+  }
+
+
+} else if (!empty($_GET)) {
   if (isset($_GET['id'])) {
-    $pdo = pdo_connect();
-    $stmt = $pdo->prepare('SELECT * FROM product WHERE id = ?');
-    $stmt->execute([$_GET['id']]);
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    $result = getRequest(
+      'http://localhost:8068/web/uas/api/router/product.router.php',
+      array(
+        "func" => "get",
+        "id" => $_GET['id'],
+      )
+    );
+
+    if ($result['status'] == false) {
+      header("location:store.php");
+    } else if ($result['data'] == []) {
+      header("location:store.php");
+    } else {
+      $product = $result['data'];
+      $result['message'] = null;
+    }
   } else {
     header("location:store.php");
   }
@@ -43,16 +185,21 @@ if (!empty($_GET)) {
 
 
   <?php
-  generateHeader('store');
+  //generateHeader('store');
   ?>
 
   <div class="container p-5 my-5">
     <div class="row">
       <?php
-      if (!isset($_GET['msg'])) {
+      if ($result['message'] == null) {
         echo '<p class="text-success text-center">Edit product below</p>';
       } else {
-        echo '<p class="text-success text-center">' . $_GET['msg'] . '</p>';
+        if ($result['status'] == true) {
+          echo '<p class="text-success text-center">' . $result['message'] . '</p>';
+        } else {
+          echo '<p class="text-danger text-center">' . $result['message'] . '</p>';
+
+        }
       }
       ?>
       <div class="col-lg-4 col-md-6">
@@ -61,8 +208,7 @@ if (!empty($_GET)) {
             <img src="image/<?= $product['imagepath'] ?>" class="card-img-top" alt="<?= $product['name'] ?>">
           </div>
         </div>
-        <form class="" method="post" action="function/editproduct.php?id=<?= $product['id'] ?>"
-          enctype="multipart/form-data">
+        <form class="" method="post" action="productedit.php?id=<?= $product['id'] ?>" enctype="multipart/form-data">
           <input name="imgupload" id="imgupload" class="form-control form-control mt-2" type="file"
             accept="image/jpeg,image/png">
           <label class="text-center mb-3" style="font-size:13px;">Make sure to upload jpeg/png image with 1:1
@@ -99,7 +245,7 @@ if (!empty($_GET)) {
                 </div>
                 <div class="d-flex justify-content-center my-2">
                   <button type="button" class="btn btn-danger mx-1" data-bs-dismiss="modal">No, cancel it</button>
-                  <button type="submit" class="btn btn-success mx-1">Yes, sure!</button>
+                  <button type="submit" name="action" value="update" class="btn btn-success mx-1">Yes, sure!</button>
                 </div>
               </div>
             </div>
@@ -120,11 +266,13 @@ if (!empty($_GET)) {
                 </div>
                 <div class="d-flex justify-content-center my-2">
                   <button type="button" class="btn btn-danger mx-1" data-bs-dismiss="modal">No, cancel it</button>
-                  <a href="function/deleteproduct.php?id=<?= $product['id'] ?>" class="btn btn-outline-danger ">Yes,
-                    delete and
-                    return
-                    to
-                    Store</a>
+                  <form action="productedit.php?id=<?= $product['id'] ?>" method="post" enctype="multipart/form-data">
+                    <button type="submit" name="action" value="delete" class="btn btn-outline-danger ">Yes,
+                      delete and
+                      return
+                      to
+                      Store</button>
+                  </form>
                 </div>
               </div>
             </div>

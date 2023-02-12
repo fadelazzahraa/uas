@@ -1,25 +1,35 @@
 <?php
 session_start();
 
-include 'function/dbconnect.php';
-include 'function/cart.php';
+include 'util/cart.php';
+include 'util/request.php';
 include 'template/header.php';
 include 'template/footer.php';
 
 
 if (!empty($_GET)) {
   if (isset($_GET['id'])) {
-    $pdo = pdo_connect();
-    $stmt = $pdo->prepare('SELECT * FROM product WHERE id = ?');
-    $stmt->execute([$_GET['id']]);
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    $result = getRequest(
+      'http://localhost:8068/web/uas/api/router/product.router.php',
+      array(
+        "func" => "get",
+        "id" => $_GET['id'],
+      )
+    );
+
+    if ($result['status'] == false) {
+      header("location:store.php");
+    } else if ($result['data'] == []) {
+      header("location:store.php");
+    } else {
+      $product = $result['data'];
+    }
   } else {
     header("location:store.php");
   }
 } else {
   header("location:store.php");
 }
-
 ?>
 
 <!DOCTYPE html>

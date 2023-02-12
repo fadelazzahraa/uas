@@ -8,7 +8,7 @@ $pdo = pdo_connect();
 if ($pdo == null) {
     echo json_encode([
         "status" => false,
-        "data" => "Internal Error"
+        "message" => "Internal Error"
     ]);
 }
 
@@ -24,7 +24,8 @@ if (isset($_GET['func'])) {
             $data = getAllProduct();
             echo json_encode([
                 "status" => $data[0],
-                "data" => $data[1]
+                "message" => $data[1],
+                "data" => $data[2]
             ]);
             break;
         case "get":
@@ -39,7 +40,8 @@ if (isset($_GET['func'])) {
             $datum = getProductByID($_GET['id']);
             echo json_encode([
                 "status" => $datum[0],
-                "data" => $datum[1]
+                "message" => $datum[1],
+                "data" => $datum[2]
             ]);
             break;
         case "delete":
@@ -190,7 +192,7 @@ if (isset($_GET['func'])) {
                         ]);
                         break;
                     } else {
-                        $deletestatus = deleteProductImage($datum[1]['imagepath']);
+                        $deletestatus = deleteProductImage($datum[2]['imagepath']);
                         if ($deletestatus[0] == false) {
                             echo json_encode([
                                 "status" => false,

@@ -7,9 +7,9 @@ function getAllProduct()
         $stmt->execute();
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return [true, $data == false ? null : $data];
+        return [true, $data == false ? 'No products found!' : 'Products found!', $data == false ? [] : $data];
     } catch (Exception $ex) {
-        return [false, $ex->getMessage()];
+        return [false, $ex->getMessage(), null];
     }
 }
 function getProductByID($id)
@@ -20,9 +20,9 @@ function getProductByID($id)
         $stmt->execute([$id]);
         $datum = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return [true, $datum == false ? null : $datum];
+        return [true, $datum == false ? 'No product found!' : 'Product found!', $datum == false ? [] : $datum];
     } catch (Exception $ex) {
-        return [false, $ex->getMessage()];
+        return [false, $ex->getMessage(), null];
     }
 }
 function addProduct($name, $description, $price, $qty, $newimagepath)
@@ -36,14 +36,10 @@ function addProduct($name, $description, $price, $qty, $newimagepath)
         return [false, $ex->getMessage()];
     }
 }
-function editProduct($name, $description, $price, $qty, $newimagepath, $id)
+function editProduct($name, $description, $price, $qty, $imagepath, $id)
 {
     try {
         $pdo = pdo_connect();
-        if ($newimagepath != null) {
-            $stmt = $pdo->prepare('UPDATE product SET imagepath = ? WHERE id = ?');
-            $stmt->execute([$newimagepath, $id]);
-        }
         if ($name != null) {
             $stmt = $pdo->prepare('UPDATE product SET name = ? WHERE id = ?');
             $stmt->execute([$name, $id]);
@@ -59,6 +55,10 @@ function editProduct($name, $description, $price, $qty, $newimagepath, $id)
         if ($qty != null) {
             $stmt = $pdo->prepare('UPDATE product SET qty = ? WHERE id = ?');
             $stmt->execute([$qty, $id]);
+        }
+        if ($imagepath != null) {
+            $stmt = $pdo->prepare('UPDATE product SET imagepath = ? WHERE id = ?');
+            $stmt->execute([$imagepath, $id]);
         }
 
         return [true, 'Edit product success!'];
@@ -84,16 +84,15 @@ function deleteProduct($id)
 {
     try {
         $datum = getProductByID($id);
-
         if ($datum[0] == true) {
-            if ($datum[1] == null) {
+            if ($datum[2] == []) {
                 return [false, "Error. Product doesn't exist!"];
             }
         } else {
             return [false, $datum[1]];
         }
 
-        $deletestatus = deleteProductImage($datum[1]['imagepath']);
+        $deletestatus = deleteProductImage($datum[2]['imagepath']);
 
         if ($deletestatus[0] == false) {
             return [false, $deletestatus[1]];
