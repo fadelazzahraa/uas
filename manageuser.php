@@ -3,6 +3,37 @@ session_start();
 
 include 'util/request.php';
 
+if (isset($_GET['action'])) {
+    if ($_GET['action'] == 'changerole') {
+        $result = postRequest(
+            'http://localhost:8068/web/uas/api/router/user.router.php',
+            array(
+                "func" => "switchrole",
+                "id" => $_GET['id'],
+            )
+        );
+        echo '
+        <script>
+            alert("' . $result['message'] . '");
+        </script>
+        ';
+    } else if ($_GET['action'] == 'delete') {
+        $result = getRequest(
+            'http://localhost:8068/web/uas/api/router/user.router.php',
+            array(
+                "func" => "delete",
+                "id" => $_GET['id'],
+            )
+        );
+        echo '
+        <script>
+            alert("' . $result['message'] . '");
+        </script>
+        ';
+    } else {
+        header("manageuser.php");
+    }
+}
 $result = getRequest(
     'http://localhost:8068/web/uas/api/router/user.router.php',
     array(
@@ -93,7 +124,7 @@ $users = $result['data'];
                                 if (operation == 'changerole') {
                                     var confirmchangerole = prompt("Type in CHANGEROLE to continue")
                                     if (confirmchangerole == 'CHANGEROLE') {
-                                        window.location.href = "function/changeroleuser.php?id=" + id
+                                        window.location.href = "manageuser.php?action=changerole&id=" + id
                                     } else {
                                         alert("Change role cancelled")
                                         return false
@@ -101,9 +132,9 @@ $users = $result['data'];
                                 } else if (operation == 'delete') {
                                     var confirmchangerole = prompt("Type in DELETE to continue")
                                     if (confirmchangerole == 'DELETE') {
-                                        window.location.href = "function/deleteuser.php?id=" + id
+                                        window.location.href = "manageuser.php?action=delete&id=" + id
                                     } else {
-                                        alert("Delete role cancelled")
+                                        alert("Delete user cancelled")
                                         return false
                                     }
                                 } else {

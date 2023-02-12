@@ -19,10 +19,16 @@ if (!empty($_POST)) {
             'http://localhost:8068/web/uas/api/router/user.router.php',
             array(
                 "func" => "changepassword",
+                "id" => $id,
                 "oldpassword" => $password,
                 "newpassword" => $newpassword,
             )
         );
+    } else {
+        $result = [
+            "status" => false,
+            'message' => 'Change user password failed. Make sure new password correctly confirmed!'
+        ];
     }
 
 }
@@ -65,7 +71,7 @@ if (!empty($_POST)) {
                     }
                 }
                 ?>
-                <form class="form-signin" method="post" action="function/changepassword.php">
+                <form class="form-signin" method="post" action="changepassword.php">
                     <div class="form-group">
                         <div class="input-group">
                             <div class="input-group-prepend">

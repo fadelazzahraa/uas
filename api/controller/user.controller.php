@@ -73,15 +73,20 @@ function editUser($name, $username, $id)
 function changePasswordUser($oldpassword, $newpassword, $id)
 {
     try {
-        $pdo = pdo_connect();
-        $stmt = $pdo->prepare('SELECT username FROM user WHERE id = ? AND password = ?');
-        $stmt->execute([$id, $oldpassword]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($user) {
-            $stmt = $pdo->prepare('UPDATE user SET password = ? WHERE id = ?');
-            $stmt->execute([$newpassword, $id]);
+        $user = getUserByID($id);
+        if ($user[0] == true && $user[2] != []) {
+            $pdo = pdo_connect();
+            $stmt = $pdo->prepare('SELECT username FROM user WHERE id = ? AND password = ?');
+            $stmt->execute([$id, $oldpassword]);
+            $user2 = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($user2) {
+                $stmt = $pdo->prepare('UPDATE user SET password = ? WHERE id = ?');
+                $stmt->execute([$newpassword, $id]);
+            } else {
+                return [false, 'Old password mismatch!'];
+            }
         } else {
-            return [false, 'Error. ID and/or password mismatch'];
+            return [false, $user[1]];
         }
         return [true, 'Change user password success!'];
     } catch (Exception $ex) {
@@ -92,18 +97,18 @@ function changePasswordUser($oldpassword, $newpassword, $id)
 function switchRoleUser($id)
 {
     try {
-        $pdo = pdo_connect();
-        $user = fetchUser($id);
+        $user = getUserByID($id);
         if ($user[0] == true) {
             if ($user[1] != null) {
-                if ($user['role'] == 'admin') {
+                $pdo = pdo_connect();
+                if ($user[2]['role'] == 'admin') {
                     $stmt = $pdo->prepare('UPDATE user SET role = "user" WHERE id = ?');
                 } else {
                     $stmt = $pdo->prepare('UPDATE user SET role = "admin" WHERE id = ?');
                 }
                 $stmt->execute([$id]);
             } else {
-                return [false, 'Error. User not found'];
+                return [false, 'User not found'];
             }
         } else {
             return [false, $user[1]];
