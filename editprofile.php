@@ -1,15 +1,65 @@
 <?php
 session_start();
 
-include 'function/dbconnect.php';
-$pdo = pdo_connect();
+include 'util/request.php';
 
-$stmt = $pdo->prepare('SELECT name, username FROM user WHERE id = ?');
-$stmt->execute([$_SESSION['id']]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+$result = [
+    "status" => false,
+    "message" => null,
+];
+
+if (!empty($_POST)) {
+    $id = $_SESSION['id'];
+    $name = $_POST['name'];
+    $username = $_POST['username'];
+
+    $result = postRequest(
+        'http://localhost:8068/web/uas/api/router/user.router.php',
+        array(
+            "func" => "update",
+            "id" => $id,
+            "name" => $name,
+            "username" => $username,
+        )
+    );
+    if ($result['status'] == true) {
+        $_SESSION['name'] = $name;
+        $result2 = getRequest(
+            'http://localhost:8068/web/uas/api/router/user.router.php',
+            array(
+                "func" => "get",
+                "id" => $_SESSION['id'],
+            )
+        );
+
+        if ($result2['status'] == false) {
+            header("location:index.php");
+        } else if ($result2['data'] == []) {
+            header("location:index.php");
+        } else {
+            $user = $result2['data'];
+        }
+    }
+} else {
+    $result = getRequest(
+        'http://localhost:8068/web/uas/api/router/user.router.php',
+        array(
+            "func" => "get",
+            "id" => $_SESSION['id'],
+        )
+    );
+
+    if ($result['status'] == false) {
+        header("location:index.php");
+    } else if ($result['data'] == []) {
+        header("location:index.php");
+    } else {
+        $user = $result['data'];
+    }
+}
+
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -35,13 +85,17 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 <h6 class="card-title text-center mb-5">Sanapati Food Store</h6>
                 <hr>
                 <?php
-                if (empty($_GET)) {
+                if ($result['message'] == 'User found!') {
                     echo '<p class="text-success text-center">Edit your profile below</p>';
                 } else {
-                    echo '<p class="text-success text-center">' . $_GET['msg'] . '</p>';
+                    if ($result['status'] == true) {
+                        echo '<p class="text-success text-center">' . $result['message'] . '</p>';
+                    } else {
+                        echo '<p class="text-danger text-center">' . $result['message'] . '</p>';
+                    }
                 }
                 ?>
-                <form class="form-signin" method="post" action="function/editprofile.php">
+                <form class="form-signin" method="post" action="editprofile.php">
                     <div class="form-group">
                         <div class="input-group">
                             <div class="input-group-prepend">
@@ -85,7 +139,8 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
                                     <div class="d-flex justify-content-center my-2">
                                         <button type="button" class="btn btn-danger mx-1" data-bs-dismiss="modal">No,
                                             cancel it</button>
-                                        <button type="submit" class="btn btn-success mx-1">Yes, sure!</button>
+                                        <button type="submit" name="action" value="update"
+                                            class="btn btn-success mx-1">Yes, sure!</button>
                                     </div>
                                 </div>
                             </div>

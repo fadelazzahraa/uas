@@ -1,3 +1,9 @@
+<?php
+if (!isset($_GET['totalprice'])) {
+    header("location:cart.php");
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 

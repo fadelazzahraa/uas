@@ -255,7 +255,7 @@ if (isset($_GET['func'])) {
                     "message" => "Error. Qty can't be negative!"
                 ]);
                 break;
-            } else if ($datum[1]['qty'] < $_POST['qty']) {
+            } else if ($datum[2]['qty'] < $_POST['qty']) {
                 echo json_encode([
                     "status" => false,
                     "message" => 'Not enough items available for this. Qty left is ' . $datum[1]['qty']

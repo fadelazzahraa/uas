@@ -80,7 +80,7 @@ if (!empty($_GET)) {
           <?= $product['qty'] ?></p>
         <?php
         if (!empty($_SESSION['loggedIn']) && $product['qty'] != 0 && $product['qty'] != $_SESSION['cart'][$product['id']]) {
-          echo '<a href="function/addtocartbutton.php?id=' . $product['id'] . '&origin=productdetail.php?id=' . $product['id'] . '" class="btn btn-primary me-1">Add to cart</a>';
+          echo '<a href="util/addtocartbutton.php?id=' . $product['id'] . '&origin=productdetail.php?id=' . $product['id'] . '" class="btn btn-primary me-1">Add to cart</a>';
         }
         if (!empty($_SESSION['loggedIn']) && $_SESSION['role'] == 'admin') {
           echo '<a href="productedit.php?id=' . $product['id'] . '" class="btn btn-success">Edit</a>';

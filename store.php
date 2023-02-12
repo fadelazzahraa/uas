@@ -65,7 +65,7 @@ $products = $result['data'];
           echo '<p class="card-text text-' . ($product['qty'] > 3 ? "success" : ($product['qty'] == 0 ? "danger" : "warning")) . ' mt-2 mb-3">Qty left: ' . $product['qty'] . '</p>';
           echo '<a href="productdetail.php?id=' . $product['id'] . '" class="btn btn-dark me-2">Detail</a>';
           if (!empty($_SESSION['loggedIn']) && $product['qty'] != 0 && $product['qty'] != $_SESSION['cart'][$product['id']]) {
-            echo '<a href="function/addtocartbutton.php?id=' . $product['id'] . '&origin=store.php" class="btn btn-primary me-2">Add to cart</a>';
+            echo '<a href="util/addtocartbutton.php?id=' . $product['id'] . '&origin=store.php" class="btn btn-primary me-2">Add to cart</a>';
           }
           if (!empty($_SESSION['loggedIn']) && $_SESSION['role'] == 'admin') {
             echo '<a href="productedit.php?id=' . $product['id'] . '" class="btn btn-success">Edit</a>';

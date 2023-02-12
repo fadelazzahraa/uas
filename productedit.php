@@ -7,7 +7,7 @@ include 'template/header.php';
 include 'template/footer.php';
 
 $result = [
-  "status" => False,
+  "status" => false,
   "message" => null,
 ];
 
@@ -185,7 +185,7 @@ if (!empty($_POST)) {
 
 
   <?php
-  //generateHeader('store');
+  generateHeader('store');
   ?>
 
   <div class="container p-5 my-5">

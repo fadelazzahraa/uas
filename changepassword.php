@@ -1,6 +1,34 @@
 <?php
 session_start();
+
+include 'util/request.php';
+
+$result = [
+    "status" => false,
+    "message" => null,
+];
+
+if (!empty($_POST)) {
+    $id = $_SESSION['id'];
+    $password = $_POST['password'];
+    $newpassword = $_POST['newpassword'];
+    $confirmpassword = $_POST['confirmpassword'];
+
+    if ($confirmpassword == $newpassword) {
+        $result = postRequest(
+            'http://localhost:8068/web/uas/api/router/user.router.php',
+            array(
+                "func" => "changepassword",
+                "oldpassword" => $password,
+                "newpassword" => $newpassword,
+            )
+        );
+    }
+
+}
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -27,13 +55,13 @@ session_start();
                 <h6 class="card-title text-center mb-5">Sanapati Food Store</h6>
                 <hr>
                 <?php
-                if (empty($_GET)) {
+                if ($result['message'] == null) {
                     echo '<p class="text-success text-center">Change your password below</p>';
                 } else {
-                    if ($_GET['msg'] == 'success') {
-                        echo '<p class="text-success text-center">Password successfully changed!</p>';
+                    if ($result['status'] == true) {
+                        echo '<p class="text-success text-center">' . $result['message'] . '</p>';
                     } else {
-                        echo '<p class="text-danger text-center">' . $_GET['msg'] . '</p>';
+                        echo '<p class="text-danger text-center">' . $result['message'] . '</p>';
                     }
                 }
                 ?>

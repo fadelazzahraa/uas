@@ -38,7 +38,7 @@ include 'template/footer.php';
 
           <h2 class="display-5 fw-bold text-center">Hello!</h2>
           <p class="fs-4 text-center">Welcome to Sanapati Food Store website! Go find out what you need right now!</p>
-          <a href="function/actionbutton.php" style="text-decoration:none">
+          <a href="util/actionbutton.php" style="text-decoration:none">
             <div class="d-grid col-6 mx-auto">
               <button class="btn btn-lg btn-primary shadow-lg" type="button"><i class="bi bi-search"></i> Go
                 shopping!</button>

@@ -1,11 +1,90 @@
 <?php
 session_start();
 
-include 'function/dbfetch.php';
-include 'function/cart.php';
+include 'util/cart.php';
+include 'util/request.php';
+
 if (isCartNotEmpty($_SESSION['cart']) != 1) {
     header("location:store.php");
 }
+
+$result = [
+    "status" => False,
+    "message" => null,
+];
+
+if (!empty($_POST)) {
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] == 'checkout') {
+            $checkoutcart = $_SESSION['cart'];
+            $fine = true;
+            foreach ($checkoutcart as $co) {
+                if ($co != 0) {
+                    $key = array_search($co, $checkoutcart);
+                    unset($checkoutcart[$key]);
+                    print_r(
+                        array(
+                            "func" => "buy",
+                            "id" => $key,
+                            "qty" => $co
+                        )
+                    );
+                    $result = postRequest(
+                        'http://localhost:8068/web/uas/api/router/product.router.php',
+                        array(
+                            "func" => "buy",
+                            "id" => $key,
+                            "qty" => $co
+                        )
+                    );
+                    if ($result['status'] != true) {
+                        $fine = false;
+                        break;
+                    }
+                }
+            }
+
+            if ($fine == true) {
+                $result2 = getRequest(
+                    'http://localhost:8068/web/uas/api/router/product.router.php',
+                    array(
+                        "func" => "getAll",
+                    )
+                );
+
+                if ($result2['status'] == true) {
+                    $_SESSION['cart'] = initCart($result2['data']);
+                    header("location:invoice.php?totalprice=" . $_POST['totalprice']);
+                }
+            }
+        } else {
+            header("location:cart.php");
+        }
+    } else {
+        header("location:cart.php");
+    }
+} else if (!empty($_GET)) {
+    if ($_GET['action'] == 'delete') {
+        if (isset($_GET['id'])) {
+            $_SESSION['cart'] = deleteFromCart($_SESSION['cart'], $_GET['id']);
+            header("location:cart.php");
+        } else {
+            header("location:cart.php");
+        }
+    } else {
+        header("location:cart.php");
+    }
+} else {
+    $result = getRequest(
+        'http://localhost:8068/web/uas/api/router/product.router.php',
+        array(
+            "func" => "getAll",
+        )
+    );
+    $products = $result['data'];
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -34,7 +113,15 @@ if (isCartNotEmpty($_SESSION['cart']) != 1) {
                 <h1 class="card-title text-center mt-4 text-light">Cart</h1>
                 <h6 class="card-title text-center mb-5 text-light">Sanapati Food Store</h6>
                 <hr style="border-top: 1px solid white;">
-                <p class="text-primary text-center">Check your order below</p>
+                <?php
+                if ($result['status'] == true) {
+                    echo '<p class="text-primary text-center">Check your order below</p>';
+                } else {
+                    echo '<p class="text-danger text-center">' . $result['message'] . '</p>';
+
+                }
+                ?>
+
                 <div class="table-responsive">
                     <table class="table table-borderless table-hover table-dark">
                         <thead>
@@ -71,7 +158,7 @@ if (isCartNotEmpty($_SESSION['cart']) != 1) {
                         function confirmRemove(id, name) {
                             var confirm = window.confirm("Confirm to remove one " + name + "?")
                             if (confirm == true) {
-                                window.location.href = "function/deletefromcartbutton.php?id=" + id
+                                window.location.href = "cart.php?action=delete&id=" + id
                             } else {
                                 return false
                             }
@@ -89,10 +176,10 @@ if (isCartNotEmpty($_SESSION['cart']) != 1) {
                     </div>
                 </div>
                 <div class="d-grid gap-2 col-6 mx-auto">
-                    <form class="form-signin" method="post"
-                        action="function/checkout.php?totalprice=<?= $totalprice ?>">
+                    <form class="form-signin" method="post" action="cart.php">
                         <button type="button" data-bs-toggle="modal" data-bs-target="#confirm-checkout"
                             class="btn btn-primary btn-block btn-lg">Checkout!</button>
+
 
                 </div>
                 <div class="modal fade" id="confirm-checkout" tabindex="-1" role="dialog" aria-hidden="true">
@@ -110,8 +197,9 @@ if (isCartNotEmpty($_SESSION['cart']) != 1) {
                                 <div class="d-flex justify-content-center my-2">
                                     <button type="button" class="btn btn-danger mx-1" data-bs-dismiss="modal">No, return
                                         to cart</button>
-                                    <button type="submit" class="btn btn-primary " name="checkout" value="checkout">Yes,
+                                    <button type="submit" class="btn btn-primary " name="action" value="checkout">Yes,
                                         checkout them!</button>
+                                    <input type="hidden" name="totalprice" value="<?= $totalprice ?>">
                                 </div>
                             </div>
                         </div>
