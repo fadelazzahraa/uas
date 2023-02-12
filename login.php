@@ -33,6 +33,8 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
         }
     }
 
+} else if (isset($_GET['login']) && $_GET['login'] == 'false') {
+    $result['message'] = 'You need to login before do shopping!';
 } else {
     $result = null;
 }
